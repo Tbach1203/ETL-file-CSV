@@ -149,18 +149,14 @@ def normalize_job_tile(job_title):
             "security", "cyber", "an ninh mạng", "an toan thong tin", "bảo mật", "bao mat"
         ]
     }
-    
     # Kiểm tra từng nhóm
     for group, keywords in job_groups.items():
         for keyword in keywords:
             if keyword in job_title_lower:
                 return group
-    
-    # Nếu không khớp với nhóm nào, trả về "Other"
     return "Other"
 
 if  __name__ == "__main__":
-    
     df = pd.read_csv('data.csv')
     df['job_group'] = df['job_title'].apply(normalize_job_tile)
     df['salary'] = df['salary'].apply(process_salary)
@@ -173,7 +169,6 @@ if  __name__ == "__main__":
     df['salary'] = df['salary'].apply(lambda x: re.sub(r'\s*USD\s*', '', str(x), flags=re.IGNORECASE) if pd.notna(x) else x)
 
     new_rows = []
-
     # Duyệt qua từng dòng trong DataFrame gốc
     for idx, row in df.iterrows():
         address_pairs = process_address(row['address'])
@@ -194,7 +189,6 @@ if  __name__ == "__main__":
 
     # Tạo DataFrame mới từ danh sách các dòng
     new_df = pd.DataFrame(new_rows)
-
     # Định nghĩa thứ tự các cột mong muốn
     desired_order = [
         'created_date', 'job_title', 'job_group', 'company', 'salary', 
@@ -202,10 +196,9 @@ if  __name__ == "__main__":
         'district', 'time', 'link_description'
     ]
 
-    # Sắp xếp lại các cột theo thứ tự mong muốn
     # Chỉ giữ lại các cột có trong DataFrame
     final_columns = [col for col in desired_order if col in new_df.columns]
     new_df = new_df[final_columns]
-    new_df = new_df.fillna('unknown')
+    # new_df = new_df.fillna('unknown')
     # Lưu file CSV mới
     new_df.to_csv('data_processed_final.csv', index=False)
