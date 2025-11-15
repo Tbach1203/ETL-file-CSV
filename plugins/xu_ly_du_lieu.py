@@ -156,49 +156,49 @@ def normalize_job_tile(job_title):
                 return group
     return "Other"
 
-if  __name__ == "__main__":
-    df = pd.read_csv('data.csv')
+def transform(raw_df):
+    df = raw_df.copy()
+    
+    # Apply transformations
     df['job_group'] = df['job_title'].apply(normalize_job_tile)
     df['salary'] = df['salary'].apply(process_salary)
 
-    # Trích xuất thông tin lương và tạo các cột mới
+    # Extract salary information and create new columns
     salary_info = df['salary'].apply(add_columns)
     df['min_salary'] = salary_info.apply(lambda x: x[0] if x else None)
     df['max_salary'] = salary_info.apply(lambda x: x[1] if x else None)
     df['salary_unit'] = salary_info.apply(lambda x: x[2] if x else None)
     df['salary'] = df['salary'].apply(lambda x: re.sub(r'\s*USD\s*', '', str(x), flags=re.IGNORECASE) if pd.notna(x) else x)
 
+    # Process address and expand rows
     new_rows = []
-    # Duyệt qua từng dòng trong DataFrame gốc
     for idx, row in df.iterrows():
         address_pairs = process_address(row['address'])
         
-        # Nếu không có cặp nào, thêm dòng gốc với city và district là None
         if not address_pairs:
             new_row = row.copy()
             new_row['city'] = None
             new_row['district'] = None
             new_rows.append(new_row)
         else:
-            # Thêm một dòng mới cho mỗi cặp (city, district)
             for city, district in address_pairs:
                 new_row = row.copy()
                 new_row['city'] = city
                 new_row['district'] = district
                 new_rows.append(new_row)
 
-    # Tạo DataFrame mới từ danh sách các dòng
+    # Create new DataFrame
     new_df = pd.DataFrame(new_rows)
-    # Định nghĩa thứ tự các cột mong muốn
+    
+    # Define desired column order
     desired_order = [
         'created_date', 'job_title', 'job_group', 'company', 'salary', 
         'min_salary', 'max_salary', 'salary_unit', 'address', 'city', 
         'district', 'time', 'link_description'
     ]
 
-    # Chỉ giữ lại các cột có trong DataFrame
+    # Keep only columns that exist in DataFrame
     final_columns = [col for col in desired_order if col in new_df.columns]
-    new_df = new_df[final_columns]
-    # new_df = new_df.fillna('unknown')
-    # Lưu file CSV mới
-    new_df.to_csv('data_processed_final.csv', index=False)
+    transformed_df = new_df[final_columns]
+    
+    return transformed_df
